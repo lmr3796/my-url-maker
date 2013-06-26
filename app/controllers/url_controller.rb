@@ -1,20 +1,32 @@
 require 'uri'
+require 'selenium-webdriver'
 class UrlController < ApplicationController
   def gen
     if params[:url] =~ URI::regexp
       # Generate a unique ID
       begin
-        url_id = SecureRandom.urlsafe_base64(4)
-      end while(UrlMapping.exists?(:url_id => url_id))
+        @url_id = SecureRandom.urlsafe_base64(4)
+      end while(UrlMapping.exists?(:url_id => @url_id))
+
+      # Generate screenshot
+      begin
+        driver = Selenium::WebDriver.for :firefox
+        driver.get params[:url]
+        driver.save_screenshot "./public/screenshots/#{@url_id}.png"
+      rescue Exception => e
+        puts e.message
+        puts e.backtrace.inspect
+      ensure
+        driver.quit
+      end
+
       # Write to DB
       p = UrlMapping.new
       p.url = params[:url]
-      p.url_id = url_id
+      p.url_id = @url_id
       p.save
+      @url = "http://#{request.host_with_port}/#{@url_id}"
 
-      #@url = gen_url(params[:url])
-      @url = url_id
-      render :text => "Jizz: #{@url}"
     else
       respond_to do |format|
         format.html { redirect_to root_url, alert: "Bad URI submitted" }

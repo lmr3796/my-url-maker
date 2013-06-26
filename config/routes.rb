@@ -1,6 +1,7 @@
 MyUrlMaker::Application.routes.draw do
   get "/gen" => 'url#gen'
   get "/:url"     => 'url#my_redirect'
+  #get "/screenshots/"
 
   # The priority is based upon order of creation:
   # first created -> highest priority.
